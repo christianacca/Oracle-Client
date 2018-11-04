@@ -1,0 +1,13 @@
+version: '3.4'
+
+services:
+  oracle-client:
+    image: ${DOCKER_REGISTRY}oracleclient
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on: 
+      - oracledb
+
+  oracledb:
+    image: christianacca/oracle-xe:hr-demodb

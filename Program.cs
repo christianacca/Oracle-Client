@@ -6,7 +6,7 @@ namespace OracleClient
     class Program
     {
 
-        private const string SetupSql = @"
+        private const string DropSchemeSql = @"
 BEGIN
   FOR rec IN
     (
@@ -22,7 +22,9 @@ BEGIN
   END LOOP;
 END;
 /
+";
 
+        private const string CreateSchemaSql = @"
 CREATE TABLE DEPT
        (DEPTNO NUMBER(2) CONSTRAINT PK_DEPT PRIMARY KEY,
 	DNAME VARCHAR2(14) ,
@@ -51,7 +53,9 @@ CREATE TABLE SALGRADE
       ( GRADE NUMBER,
 	LOSAL NUMBER,
 	HISAL NUMBER );
-    
+";
+
+        private const string InsertDataSql = @"
 INSERT INTO DEPT VALUES
 	(10,'ACCOUNTING','NEW YORK');
 INSERT INTO DEPT VALUES (20,'RESEARCH','DALLAS');
@@ -96,6 +100,8 @@ INSERT INTO SALGRADE VALUES (4,2001,3000);
 INSERT INTO SALGRADE VALUES (5,3001,9999);
 ";
 
+        private const string SetupSql = DropSchemeSql + CreateSchemaSql + InsertDataSql;
+
         static void Main(string[] args)
         {
             //Demo: Basic ODP.NET Core application to connect, query, and return
@@ -104,9 +110,11 @@ INSERT INTO SALGRADE VALUES (5,3001,9999);
             //Create a connection to Oracle			
             string conString = "User Id=sys;Password=Oracle18;DBA Privilege=SYSDBA;" +
 
-            //How to connect to an Oracle DB without SQL*Net configuration file
-            //  also known as tnsnames.ora.
-            "Data Source=localhost:32118/XEPDB1;";
+            //How to connect to an Oracle DB without SQL*Net / tnsnames.ora configuration file
+            "Data Source=oracledb:1521/XEPDB1;";
+
+            // use the following when the docker container for db has published it's port to the host
+//            "Data Source=localhost:32118/XEPDB1;";
 
             //How to connect to an Oracle DB with a DB alias.
             //Uncomment below and comment above.
@@ -121,6 +129,7 @@ INSERT INTO SALGRADE VALUES (5,3001,9999);
                     // note: script `SetupSql` works fine when run from SQL Developer UI but fails with:
                     // PLS-00103: Encountered the symbol "/"
 /*
+                    // setup db
                     using (OracleCommand cmd = con.CreateCommand())
                     {
                         cmd.BindByName = true;
@@ -134,6 +143,7 @@ INSERT INTO SALGRADE VALUES (5,3001,9999);
                     }
 */
 
+                    // retrieve data
                     using (OracleCommand cmd = con.CreateCommand())
                     {
                         cmd.BindByName = true;
