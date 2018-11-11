@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
-using System.Linq;
+using System.Data.Common;
+using System.Threading.Tasks;
 using Dapper;
 using Oracle.ManagedDataAccess.Client;
 
@@ -8,7 +9,7 @@ namespace Oracle_Client
 {
     class Program
     {
-        static void Main()
+        static async Task Main()
         {
             //Demo: Basic ODP.NET Core application to connect, query, and return
             // results from an OracleDataReader to a console
@@ -31,7 +32,9 @@ namespace Oracle_Client
                 using (OracleConnection con = new OracleConnection(conString))
                 using(OracleCommand cmd = con.CreateCommand())
                 {
-                    con.Open();
+                    // note: you will need to wait for the oracledb docker service (aka container)
+                    // to become healthy... until then opening connection will fail
+                    await con.OpenAsync();
 
                     const string selectSql =
                         "select first_name AS FirstName from HR.employees where department_id  = :id";
@@ -40,11 +43,11 @@ namespace Oracle_Client
                     cmd.CommandText = selectSql;
                     cmd.Parameters.Add(new OracleParameter("id", 10));
 
-                    FetchDataUsingDataReader(cmd);
+                    await FetchDataUsingDataReader(cmd);
 
-                    FetchQuerySchema(cmd);
+                    await FetchQuerySchema(cmd);
 
-                    FetchDataUsingDapper(con, selectSql);
+                    await FetchDataUsingDapper(con, selectSql);
                 }
 
             }
@@ -59,9 +62,9 @@ namespace Oracle_Client
             Console.ReadLine();
         }
 
-        private static void FetchDataUsingDapper(OracleConnection con, string selectSql)
+        private static async Task FetchDataUsingDapper(OracleConnection con, string selectSql)
         {
-            var rows = con.Query(selectSql, new {id = 10}).ToList();
+            var rows = await con.QueryAsync(selectSql, new {id = 10});
 
             Console.WriteLine("Fetch data using Dapper (dyamic)");
             foreach (var row in rows)
@@ -70,10 +73,10 @@ namespace Oracle_Client
             }
         }
 
-        private static void FetchDataUsingDataReader(OracleCommand command)
+        private static async Task FetchDataUsingDataReader(DbCommand command)
         {
             //Execute the command and use DataReader to display the data
-            using (OracleDataReader reader = command.ExecuteReader())
+            using (var reader = await command.ExecuteReaderAsync())
             {
                 Console.WriteLine("Fetch data using DataReader");
                 while (reader.Read())
@@ -83,9 +86,9 @@ namespace Oracle_Client
             }
         }
 
-        private static void FetchQuerySchema(OracleCommand command)
+        private static async Task FetchQuerySchema(DbCommand command)
         {
-            using (OracleDataReader reader = command.ExecuteReader(CommandBehavior.SchemaOnly))
+            using (var reader = await command.ExecuteReaderAsync(CommandBehavior.SchemaOnly))
             {
                 var schemaInfo = reader.GetSchemaInfo();
 
