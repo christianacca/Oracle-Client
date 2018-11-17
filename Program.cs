@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using Oracle.ManagedDataAccess.Client;
@@ -90,10 +92,14 @@ namespace Oracle_Client
         {
             using (var reader = await command.ExecuteReaderAsync(CommandBehavior.SchemaOnly))
             {
-                var schemaInfo = reader.GetSchemaInfo();
-
                 Console.WriteLine("Schema information");
-                foreach (var (columnName, key, value) in schemaInfo)
+
+                IEnumerable<ColumnSchemaInfo> columns = reader.GetSchemaInfo();
+                columns.ToList().ForEach(Console.Out.WriteLine);
+
+                // the raw metadata (as an alternative to consuming ColumnSchemaInfo's)
+                var schemaRecords = reader.GetSchemaInfoRecords().ToList();
+                foreach (var (columnName, key, value) in schemaRecords)
                 {
                     Console.Out.WriteLine($"{columnName}: {key} = {value}");
                 }
