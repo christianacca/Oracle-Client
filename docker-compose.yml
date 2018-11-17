@@ -10,5 +10,5 @@ services:
       - oracledb
 
   oracledb:
-    # custom image created from https://github.com/christianacca/docker-oracle-xe/tree/no-volume
+    # https://hub.docker.com/r/christianacca/oracle-xe/
     image: christianacca/oracle-xe:18c
